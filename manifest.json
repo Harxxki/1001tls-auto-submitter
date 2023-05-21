@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "Auto Clicker",
+  "name": "1001TLs Auto Submitter",
   "version": "1.0",
   "permissions": ["tabs", "activeTab", "http://*/*", "https://*/*"],
   "background": {
