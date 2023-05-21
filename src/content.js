@@ -25,7 +25,7 @@ function stopTimer() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.command === 'START') {
     toggle = true
-    if (window.location.href.includes('example.com/example')) startTimer()
+    if (window.location.href.includes('1001tracklists.com/create/tracklist.php')) startTimer()
   } else if (request.command === 'STOP') {
     toggle = false
     stopTimer()
@@ -36,7 +36,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Check when page url changes
 const observer = new MutationObserver(() => {
-  if (window.location.href.includes('example.com/example')) {
+  if (window.location.href.includes('1001tracklists.com/create/tracklist.php')) {
     if (toggle) startTimer()
   } else {
     stopTimer()
