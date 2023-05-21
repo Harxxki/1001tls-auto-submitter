@@ -1,20 +1,21 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "1001TLs Auto Submitter",
   "version": "1.0",
-  "permissions": ["tabs", "activeTab", "http://*/*", "https://*/*"],
-  "background": {
-    "scripts": ["src/background.js"],
-    "persistent": false
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_icon": {
+      "16": "icons/off_icon.png"
+    }
   },
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "permissions": ["activeTab"],
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
       "js": ["src/content.js"]
     }
-  ],
-  "browser_action": {
-    "default_icon": "icons/off_icon.png",
-    "default_popup": "src/popup.html"
-  }
+  ]
 }

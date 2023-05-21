@@ -15,34 +15,40 @@ function startTimer() {
     handleClick()
     startTimer()
   }, delay)
+  return true
 }
 
 function stopTimer() {
-  if (timer) clearTimeout(timer)
-  timer = null
+  if (timer) {
+    clearTimeout(timer)
+    timer = null
+    return false
+  }
 }
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.command === 'START') {
-    toggle = true
-    if (window.location.href.includes('1001tracklists.com/create/tracklist.php')) startTimer()
+const observer = new MutationObserver(handleClick)
+observer.observe(document.body, { childList: true, subtree: true })
+
+chrome.runtime.onMessage.addListener(async function (
+  request,
+  sender,
+  sendResponse
+) {
+  if (request.command === 'GET_STATUS') {
+    sendResponse({ toggle, timer })
+  } else if (request.command === 'START') {
+    if (
+      window.location.href.includes('1001tracklists.com/create/tracklist.php')
+    ) {
+      toggle = true
+      await startTimer()
+      sendResponse({ toggle, timer: true })
+    } else {
+      sendResponse(null)
+    }
   } else if (request.command === 'STOP') {
     toggle = false
     stopTimer()
-  } else if (request.command === 'GET_STATUS') {
-    sendResponse({ toggle, timer })
+    sendResponse({ toggle, timer: false })
   }
-})
-
-// Check when page url changes
-const observer = new MutationObserver(() => {
-  if (window.location.href.includes('1001tracklists.com/create/tracklist.php')) {
-    if (toggle) startTimer()
-  } else {
-    stopTimer()
-  }
-})
-observer.observe(document.querySelector('body'), {
-  childList: true,
-  subtree: true,
 })

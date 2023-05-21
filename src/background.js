@@ -1,20 +1,20 @@
 let tabId = null
 
-chrome.browserAction.onClicked.addListener((tab) => {
+chrome.action.onClicked.addListener(async (tab) => {
   if (tabId === null) {
     tabId = tab.id
-    chrome.browserAction.setIcon({ path: 'icons/on_icon.png' })
-    chrome.tabs.sendMessage(tab.id, { command: 'START' })
+    await chrome.action.setIcon({ path: 'icons/on_icon.png', tabId: tab.id })
+    chrome.tabs.sendMessage(tabId, { command: 'START' })
   } else {
+    await chrome.action.setIcon({ path: 'icons/off_icon.png', tabId: tab.id })
+    chrome.tabs.sendMessage(tabId, { command: 'STOP' })
     tabId = null
-    chrome.browserAction.setIcon({ path: 'icons/off_icon.png' })
-    chrome.tabs.sendMessage(tab.id, { command: 'STOP' })
   }
 })
 
-chrome.tabs.onRemoved.addListener((id) => {
-  if (id === tabId) {
+chrome.tabs.onUpdated.addListener((id, changeInfo) => {
+  if (id === tabId && changeInfo.status && changeInfo.status === 'complete') {
     tabId = null
-    chrome.browserAction.setIcon({ path: 'icons/off_icon.png' })
+    chrome.action.setIcon({ path: 'icons/off_icon.png', tabId: id })
   }
 })
