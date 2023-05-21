@@ -2,25 +2,19 @@ function handleClick() {
   const button = document.querySelector(
     'button[title="submit changes"][name="btn_submitChanges"]'
   )
-  if (button) button.dispatchEvent(new MouseEvent('click'))
+  if (button) {
+    button.dispatchEvent(new MouseEvent('click'))
+    console.log('button clicked')
+  } else {
+    console.log('button not found')
+  }
 }
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.command === 'CLICK') {
+    console.log('content: received CLICK message')
     handleClick()
     sendResponse({})
-    return true // Indicate that we will send a response asynchronously
   }
-})
-
-window.addEventListener('load', () => {
-  if (
-    window.location.href.includes('1001tracklists.com/create/tracklist.php')
-  ) {
-    chrome.runtime.sendMessage({ command: 'CHECK_TIMER' }, (response) => {
-      if (response && response.active) {
-        chrome.runtime.sendMessage({ command: 'CLICK' })
-      }
-    })
-  }
+  return true
 })

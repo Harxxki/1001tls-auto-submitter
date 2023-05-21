@@ -2,14 +2,16 @@ let timerActive = false
 let timer = null
 
 async function handleClick(tabId) {
-  await chrome.tabs.sendMessage(tabId, { command: 'CLICK' }, () => {})
+  console.log('background: sent CLICK message to content script')
+  await chrome.tabs.sendMessage(tabId, { command: 'CLICK' })
 }
 
 async function startTimer(tabId) {
+  console.log('starTimer called')
   if (timer) clearTimeout(timer)
 
   // const delay = Math.random() * 5 * 60 * 1000 + 10 * 60 * 1000; // 10 to 15 minutes
-  const delay = 10 * 1000 // 10 seconds for testing
+  const delay = 5 * 1000 // 5 seconds for testing
   timer = setTimeout(async () => {
     await handleClick(tabId)
     startTimer(tabId)
@@ -20,6 +22,7 @@ async function startTimer(tabId) {
 }
 
 async function stopTimer(tabId) {
+  console.log('stopTimer called')
   if (timer) {
     clearTimeout(timer)
     timer = null
@@ -28,19 +31,11 @@ async function stopTimer(tabId) {
   await chrome.action.setIcon({ path: '../icons/off_icon.png', tabId })
 }
 
-chrome.action.onClicked.addListener(async (tab) => {
+chrome.tabs.onActivated.addListener(async (id, changeInfo, tab) => {
   if (timerActive) {
-    await stopTimer(tab.id)
+    await chrome.action.setIcon({ path: '../icons/on_icon.png' })
   } else {
-    await startTimer(tab.id)
-  }
-})
-
-chrome.tabs.onUpdated.addListener(async (id, changeInfo, tab) => {
-  if (timerActive) {
-    await chrome.action.setIcon({ path: '../icons/on_icon.png', id })
-  } else {
-    await chrome.action.setIcon({ path: '../icons/off_icon.png', id })
+    await chrome.action.setIcon({ path: '../icons/off_icon.png' })
   }
 })
 
