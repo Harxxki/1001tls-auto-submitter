@@ -52,3 +52,53 @@ chrome.runtime.onMessage.addListener(async function (
     sendResponse({ toggle, timer: false })
   }
 })
+
+window.addEventListener('load', () => {
+  if (
+    window.location.href.includes('1001tracklists.com/create/tracklist.php')
+  ) {
+    chrome.runtime.sendMessage({ command: 'CHECK_TIMER' }, (response) => {
+      if (response.active) {
+        startTimer()
+      }
+    })
+  }
+})
+
+chrome.runtime.onMessage.addListener(async function (
+  request,
+  sender,
+  sendResponse
+) {
+  if (request.command === 'GET_STATUS') {
+    sendResponse({ toggle, timer: timer !== null })
+  } else if (request.command === 'START') {
+    if (
+      window.location.href.includes('1001tracklists.com/create/tracklist.php')
+    ) {
+      toggle = true
+      if (!timer) {
+        await startTimer()
+      }
+      sendResponse({ toggle, timer: timer !== null })
+    } else {
+      sendResponse(null)
+    }
+  } else if (request.command === 'STOP') {
+    toggle = false
+    stopTimer()
+    sendResponse({ toggle, timer: timer !== null })
+  }
+})
+
+window.addEventListener('load', () => {
+  if (
+    window.location.href.includes('1001tracklists.com/create/tracklist.php')
+  ) {
+    chrome.runtime.sendMessage({ command: 'CHECK_TIMER' }, (response) => {
+      if (response.active && !timer) {
+        startTimer()
+      }
+    })
+  }
+})
