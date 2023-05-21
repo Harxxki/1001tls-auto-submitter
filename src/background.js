@@ -1,43 +1,74 @@
-let activeTimers = {}
+let timerActive = false
+let timer = null
+
+async function handleClick(tabId) {
+  await chrome.tabs.sendMessage(tabId, { command: 'CLICK' }, () => {})
+}
+
+async function startTimer(tabId) {
+  if (timer) clearTimeout(timer)
+
+  // const delay = Math.random() * 5 * 60 * 1000 + 10 * 60 * 1000; // 10 to 15 minutes
+  const delay = 10 * 1000 // 10 seconds for testing
+  timer = setTimeout(async () => {
+    await handleClick(tabId)
+    startTimer(tabId)
+  }, delay)
+
+  timerActive = true
+  await chrome.action.setIcon({ path: '../icons/on_icon.png', tabId })
+}
+
+async function stopTimer(tabId) {
+  if (timer) {
+    clearTimeout(timer)
+    timer = null
+  }
+  timerActive = false
+  await chrome.action.setIcon({ path: '../icons/off_icon.png', tabId })
+}
 
 chrome.action.onClicked.addListener(async (tab) => {
-  if (!(tab.id in activeTimers)) {
-    activeTimers[tab.id] = true
-    await chrome.action.setIcon({ path: 'icons/on_icon.png', tabId: tab.id })
-    chrome.tabs.sendMessage(tab.id, { command: 'START' })
+  if (timerActive) {
+    await stopTimer(tab.id)
   } else {
-    delete activeTimers[tab.id]
-    await chrome.action.setIcon({ path: 'icons/off_icon.png', tabId: tab.id })
-    chrome.tabs.sendMessage(tab.id, { command: 'STOP' })
-  }
-})
-
-chrome.tabs.onRemoved.addListener((id) => {
-  if (id in activeTimers) {
-    delete activeTimers[id]
+    await startTimer(tab.id)
   }
 })
 
 chrome.tabs.onUpdated.addListener(async (id, changeInfo, tab) => {
-  if (
-    changeInfo.status === 'complete' &&
-    tab.url.includes('1001tracklists.com/create/tracklist.php')
-  ) {
-    if (id in activeTimers) {
-      await chrome.action.setIcon({ path: 'icons/on_icon.png', tabId: id })
-      chrome.tabs.sendMessage(id, { command: 'START' })
-    } else {
-      await chrome.action.setIcon({ path: 'icons/off_icon.png', tabId: id })
-    }
+  if (timerActive) {
+    await chrome.action.setIcon({ path: '../icons/on_icon.png', id })
+  } else {
+    await chrome.action.setIcon({ path: '../icons/off_icon.png', id })
   }
 })
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.command === 'CHECK_TIMER') {
-    if (sender.tab.id in activeTimers) {
-      sendResponse({ active: true })
+    sendResponse({ active: timerActive })
+  } else if (request.command === 'START') {
+    if (!timerActive) {
+      chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+        if (tabs[0].url.includes('1001tracklists.com/create/tracklist.php')) {
+          await startTimer(tabs[0].id)
+          sendResponse({ active: timerActive })
+        }
+      })
     } else {
-      sendResponse({ active: false })
+      sendResponse({ active: timerActive })
+    }
+  } else if (request.command === 'STOP') {
+    if (timerActive) {
+      chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+        if (tabs[0].url.includes('1001tracklists.com/create/tracklist.php')) {
+          await stopTimer(tabs[0].id)
+          sendResponse({ active: timerActive })
+        }
+      })
+    } else {
+      sendResponse({ active: timerActive })
     }
   }
+  return true
 })

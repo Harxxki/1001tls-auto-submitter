@@ -11,10 +11,10 @@
   "background": {
     "service_worker": "src/background.js"
   },
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "tabs", "storage"],
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
+      "matches": ["https://www.1001tracklists.com/create/tracklist.php*"],
       "js": ["src/content.js"]
     }
   ]
